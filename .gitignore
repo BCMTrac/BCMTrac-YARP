@@ -18,3 +18,7 @@ obj/
 *.pfx
 *.snk
 secrets.json
+
+#.net
+.Production.json
+.Development.json
