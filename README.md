@@ -1,5 +1,11 @@
 YARP Reverse Proxy
 
+CI
+
+![CI](https://github.com/OWNER/REPO/actions/workflows/dotnet.yml/badge.svg)
+
+Replace OWNER/REPO above with your GitHub org and repository name after you push this repo.
+
 Run locally
 
 - Ensure AuthenticationAPI runs on https://localhost:5001 with /.well-known/jwks.json
