@@ -1,0 +1,20 @@
+# Build outputs
+bin/
+obj/
+
+# User-specific
+.vscode/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Rider/VS
+.idea/
+.vs/
+
+# Certs/Secrets (none checked in)
+*.pfx
+*.snk
+secrets.json
