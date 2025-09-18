@@ -2,7 +2,13 @@ YARP Reverse Proxy
 
 CI
 
+<<<<<<< HEAD
 ![CI](https://github.com/Brandon255-rgb/BCMTrac_YARP/actions/workflows/dotnet.yml/badge.svg)
+=======
+![CI](https://github.com/OWNER/REPO/actions/workflows/dotnet.yml/badge.svg)
+
+Replace OWNER/REPO above with your GitHub org and repository name after you push this repo.
+>>>>>>> 922b84a (docs: add GitHub Actions CI badge placeholder to README)
 
 Run locally
 
