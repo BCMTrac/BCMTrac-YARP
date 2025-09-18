@@ -91,6 +91,19 @@ builder.Services.AddReverseProxy()
 
 var app = builder.Build();
 
+// Early health check short-circuit
+app.Use(async (ctx, next) =>
+{
+    var path = ctx.Request.Path.Value ?? string.Empty;
+    if (string.Equals(path, "/health", StringComparison.Ordinal))
+    {
+        ctx.Response.ContentType = "application/json";
+        await ctx.Response.WriteAsync("{\"ok\":true}");
+        return;
+    }
+    await next();
+});
+
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -98,43 +111,46 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.UseHttpsRedirection();
 app.UseHsts();
-app.UseAuthentication();
-app.UseAuthorization();
 
 var adminCookieName = bridge["AdminBackOfficeCookieName"] ?? "AdminBackOffcieCookie";
 var headerNames = bridge.GetSection("HeaderNames").Get<string[]>() ?? new[] { "X-Session-Id", "X-SessionID", "X-Legacy-Session-3" };
 
-app.Use(async (ctx, next) =>
+app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/health"), branch =>
 {
-    var path = ctx.Request.Path.Value ?? "/";
-    var hitsMonolith = !path.StartsWith("/login")
-                    && !path.StartsWith("/roles-select")
-                    && !path.StartsWith("/schemes-select")
-                    && !path.StartsWith("/site-admin")
-                    && !path.StartsWith("/ui")
-                    && !path.StartsWith("/.well-known");
+    branch.UseAuthentication();
+    branch.UseAuthorization();
 
-    if (hitsMonolith)
+    branch.Use(async (ctx, next) =>
     {
-        var authz = await ctx.RequestServices.GetRequiredService<IAuthorizationService>()
-            .AuthorizeAsync(ctx.User, policyName: "CompletedFlow");
-        if (!authz.Succeeded)
+        var path = ctx.Request.Path.Value ?? "/";
+        var hitsMonolith = !path.StartsWith("/login")
+                        && !path.StartsWith("/roles-select")
+                        && !path.StartsWith("/schemes-select")
+                        && !path.StartsWith("/site-admin")
+                        && !path.StartsWith("/ui")
+                        && !path.StartsWith("/.well-known");
+
+        if (hitsMonolith)
         {
-            await ctx.ChallengeAsync();
-            return;
+            var authz = await ctx.RequestServices.GetRequiredService<IAuthorizationService>()
+                .AuthorizeAsync(ctx.User, policyName: "CompletedFlow");
+            if (!authz.Succeeded)
+            {
+                await ctx.ChallengeAsync();
+                return;
+            }
+
+            if (ctx.Request.Cookies.TryGetValue(adminCookieName, out var sid) && !string.IsNullOrEmpty(sid))
+            {
+                foreach (var h in headerNames) ctx.Request.Headers[h] = sid;
+            }
         }
 
-        if (ctx.Request.Cookies.TryGetValue(adminCookieName, out var sid) && !string.IsNullOrEmpty(sid))
-        {
-            foreach (var h in headerNames) ctx.Request.Headers[h] = sid;
-        }
-    }
-
-    await next();
+        await next();
+    });
 });
 
 app.MapReverseProxy();
-app.MapGet("/health", () => Results.Ok(new { ok = true }));
 
 app.Run();
 
