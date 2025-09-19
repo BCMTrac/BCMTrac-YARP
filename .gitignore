@@ -14,7 +14,7 @@ obj/
 .idea/
 .vs/
 
-# Certs/Secrets (none checked in)
+# Certs/Secrets (none should bechecked in)
 *.pfx
 *.snk
 secrets.json
