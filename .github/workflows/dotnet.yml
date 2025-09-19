@@ -1,63 +1,6 @@
 name: YARP .NET CI
 
 on:
-<<<<<<< HEAD
-    push:
-        branches: ["**"]
-    pull_request:
-        branches: ["**"]
-
-jobs:
-    build:
-        name: Build (.NET 8)
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-latest, windows-latest]
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v5
-
-            - name: Setup .NET 8.x
-              uses: actions/setup-dotnet@v4
-              with:
-                  dotnet-version: "8.0.x"
-                  cache: true
-                  cache-dependency-path: |
-                      **/packages.lock.json
-                      **/*.csproj
-
-            - name: Restore
-              run: dotnet restore YARP.sln
-
-            - name: Build
-              run: dotnet build YARP.sln -c Release --no-restore --nologo
-
-    smoke:
-        name: Smoke Test (Windows)
-        runs-on: windows-latest
-        needs: build
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v5
-
-            - name: Setup .NET 8.x
-              uses: actions/setup-dotnet@v4
-              with:
-                  dotnet-version: "8.0.x"
-
-            - name: Restore
-              run: dotnet restore YARP.sln
-
-            - name: Build Release
-              run: dotnet build YARP.sln -c Release --no-restore --nologo
-
-            - name: Run smoke test
-              shell: pwsh
-              run: |
-                  pwsh -NoProfile -File "scripts/smoke.ps1"
-=======
   push:
     branches: [ "**" ]
   pull_request:
@@ -89,4 +32,27 @@ jobs:
 
       - name: Build
         run: dotnet build YARP.sln -c Release --no-restore --nologo
->>>>>>> fc24553 (ci: add GitHub Actions workflow for .NET 8 restore/build on push and PR (Ubuntu/Windows matrix))
+
+  smoke:
+    name: Smoke Test (Windows)
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET 8.x
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore YARP.sln
+
+      - name: Build Release
+        run: dotnet build YARP.sln -c Release --no-restore --nologo
+
+      - name: Run smoke test
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File "scripts/smoke.ps1"

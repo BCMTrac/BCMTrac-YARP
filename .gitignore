@@ -19,6 +19,3 @@ obj/
 *.snk
 secrets.json
 
-#.net
-.Production.json
-.Development.json
